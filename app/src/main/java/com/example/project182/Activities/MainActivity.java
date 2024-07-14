@@ -1,10 +1,12 @@
 package com.example.project182.Activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,19 +18,25 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.project182.Adapters.FilmListAdapter;
 import com.example.project182.Adapters.SlidersAdapter;
+import com.example.project182.Database.DatabaseHelper;
 import com.example.project182.Domains.Film;
 import com.example.project182.Domains.SliderItems;
+import com.example.project182.Entity.Account;
+import com.example.project182.R;
 import com.example.project182.databinding.ActivityMainBinding;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.ismaeldivita.chipnavigation.ChipNavigationBar;
 
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
     ActivityMainBinding binding;
+    DatabaseHelper dbHelper;
+    Account account;
     private FirebaseDatabase database;
     private Handler sliderHandler = new Handler();
     private Runnable sliderRunnable = new Runnable() {
@@ -45,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         database = FirebaseDatabase.getInstance();
+        dbHelper = new DatabaseHelper(this);
 
         Window w = getWindow();
         w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
@@ -53,6 +62,26 @@ public class MainActivity extends AppCompatActivity {
         initBanner();
         initTopMoving();
         initUpcomming();
+
+        Intent intent = getIntent();
+        int userId = intent.getIntExtra("userId", -1);
+
+        account = dbHelper.getAccountById(userId);
+
+        binding.textView3.setText("Hello " + account.getUsername());
+        binding.textView4.setText(account.getUsername());
+        binding.chipNavigtation.setOnItemSelectedListener(new ChipNavigationBar.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(int id) {
+                if (id == R.id.profile) {
+                    Intent intent = new Intent(MainActivity.this, ProfileActivity.class);
+
+                    intent.putExtra("userId", account.getId());
+
+                    startActivity(intent);
+                }
+            }
+        });
     }
     private void initUpcomming() {
         DatabaseReference myRef = database.getReference("Upcomming");
